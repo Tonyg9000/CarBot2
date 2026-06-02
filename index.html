@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classic Car Alert Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9982a;
+    --gold-light: #e8b84b;
+    --cream: #f2e8d5;
+    --ink: #0e0b07;
+    --ink2: #1c1710;
+    --rust: #8b3a1a;
+    --muted: #6b5e4a;
+    --border: #3a3020;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    min-height: 100vh;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(201,152,42,0.04) 39px, rgba(201,152,42,0.04) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(201,152,42,0.04) 39px, rgba(201,152,42,0.04) 40px);
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 3px double var(--gold);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: auto;
+    padding: 40px 32px 28px;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+  }
+  .header-badge {
+    width: 72px;
+    height: 72px;
+    border: 3px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    flex-shrink: 0;
+    background: var(--ink2);
+    box-shadow: 0 0 0 6px rgba(201,152,42,0.1);
+  }
+  .header-text h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: 6px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .header-text p {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    font-style: italic;
+  }
+  .status-bar {
+    background: var(--ink2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 32px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .status-bar span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #2ecc71; animation: pulse 2s infinite; }
+  .dot.off { background: var(--rust); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  @media(max-width: 780px) { main { grid-template-columns: 1fr; padding: 24px 16px; } }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 24px; }
+
+  .card {
+    background: var(--ink2);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--gold);
+    padding: 24px;
+    position: relative;
+  }
+  .card h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 4px;
+    font-size: 18px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-style: normal;
+    font-family: 'Source Code Pro', monospace;
+  }
+  input[type="email"], input[type="text"] {
+    width: 100%;
+    background: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    color: var(--cream);
+    padding: 10px 14px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus { border-color: var(--gold); }
+
+  .btn {
+    display: inline-block;
+    padding: 11px 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 3px;
+    font-size: 15px;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+    text-align: center;
+  }
+  .btn-primary { background: var(--gold); color: var(--ink); }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-secondary { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+  .btn-secondary:hover { background: rgba(201,152,42,0.1); }
+  .btn-full { width: 100%; margin-top: 14px; }
+
+  .env-block {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--rust);
+    padding: 14px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.8;
+  }
+  .env-block span { color: var(--gold-light); }
+
+  .source-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .source-chip {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink);
+  }
+  .source-chip .dot { width: 6px; height: 6px; }
+
+  /* LISTINGS */
+  .listings-section h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 5px;
+    font-size: 22px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .count-badge {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 3px 10px;
+    font-weight: 600;
+  }
+
+  .listing-card {
+    border: 1px solid var(--border);
+    background: var(--ink2);
+    padding: 20px;
+    margin-bottom: 12px;
+    transition: border-color .2s, transform .15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .listing-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--gold);
+    transform: scaleY(0);
+    transition: transform .2s;
+    transform-origin: bottom;
+  }
+  .listing-card:hover { border-color: var(--gold); transform: translateX(3px); }
+  .listing-card:hover::before { transform: scaleY(1); }
+
+  .listing-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .source-tag {
+    background: rgba(201,152,42,0.12);
+    color: var(--gold);
+    padding: 2px 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .year-tag {
+    background: var(--rust);
+    color: var(--cream);
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .listing-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+  .listing-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .listing-link {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border: 1px solid var(--gold);
+    transition: all .15s;
+  }
+  .listing-link:hover { background: var(--gold); color: var(--ink); }
+
+  .empty-state {
+    padding: 60px 32px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state p { font-size: 14px; font-style: italic; }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 14px 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+    font-size: 15px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  small { font-size: 11px; color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-badge">🏎</div>
+    <div class="header-text">
+      <h1>Classic Car Alert Bot</h1>
+      <p>Monitoring Craigslist · eBay Motors · AutoTrader · Cars.com &nbsp;|&nbsp; Years 1900 – 2005</p>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span>
+      <span class="dot {% if not is_running %}off{% endif %}"></span>
+      Scheduler: {{ 'ACTIVE' if is_running else 'STOPPED' }}
+    </span>
+    <span>⏱ Next check: {{ next_run or 'Not scheduled' }}</span>
+    <span>📬 Alert email: {{ email or 'Not configured' }}</span>
+  </div>
+</header>
+
+<main>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Settings -->
+    <div class="card">
+      <h2>⚙ Alert Settings</h2>
+      <form action="/save-settings" method="POST">
+        <label for="email">Your Email Address</label>
+        <input type="email" id="email" name="email" value="{{ email }}" placeholder="you@example.com" required>
+        <button class="btn btn-primary btn-full" type="submit">Save Email</button>
+      </form>
+    </div>
+
+    <!-- Run Now -->
+    <div class="card">
+      <h2>▶ Manual Check</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;font-style:italic;">
+        Force an immediate scan across all sources right now.
+      </p>
+      <button class="btn btn-secondary btn-full" onclick="runNow()">Run Check Now</button>
+    </div>
+
+    <!-- Sources -->
+    <div class="card">
+      <h2>📡 Active Sources</h2>
+      <div class="source-grid">
+        <div class="source-chip"><span class="dot"></span> Craigslist</div>
+        <div class="source-chip"><span class="dot"></span> eBay Motors</div>
+        <div class="source-chip"><span class="dot"></span> AutoTrader</div>
+        <div class="source-chip"><span class="dot"></span> Cars.com</div>
+      </div>
+      <hr class="divider">
+      <small>Checks every 15 minutes. Craigslist covers 15 major US cities via RSS.</small>
+    </div>
+
+    <!-- Env vars setup guide -->
+    <div class="card">
+      <h2>🔑 SMTP Setup</h2>
+      <p style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:12px;">
+        Set these environment variables in your deployment:
+      </p>
+      <div class="env-block">
+        <span>SMTP_HOST</span>=smtp.gmail.com<br>
+        <span>SMTP_PORT</span>=587<br>
+        <span>SMTP_USER</span>=you@gmail.com<br>
+        <span>SMTP_PASS</span>=your_app_password<br>
+        <span>ALERT_EMAIL</span>=you@gmail.com<br>
+        <span>CHECK_INTERVAL_MINUTES</span>=15
+      </div>
+      <hr class="divider">
+      <small>For Gmail: use an <em>App Password</em>, not your main password. Enable 2FA first.</small>
+    </div>
+
+  </aside>
+
+  <!-- LISTINGS -->
+  <section class="listings-section">
+    <h2>
+      Recent Discoveries
+      <span class="count-badge">{{ listings|length }}</span>
+    </h2>
+
+    {% if listings %}
+      {% for l in listings %}
+      <div class="listing-card">
+        <div class="listing-meta">
+          <span class="source-tag">{{ l.source }}</span>
+          {% if l.year %}<span class="year-tag">{{ l.year }}</span>{% endif %}
+          <span>{{ l.seen_at[:16].replace('T',' ') }} UTC</span>
+        </div>
+        <div class="listing-title">{{ l.title }}</div>
+        <div class="listing-footer">
+          <span class="price">{{ l.price if l.price and l.price != 'N/A' else '—' }}</span>
+          <a href="{{ l.url }}" target="_blank" class="listing-link">View Listing →</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="icon">🔍</div>
+        <p>No listings found yet.<br>Configure your email and hit <strong>Run Check Now</strong> to start scanning.</p>
+      </div>
+    {% endif %}
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+  function showToast(msg, ok=true) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = ok ? 'var(--gold)' : '#c0392b';
+    t.style.color = ok ? 'var(--ink)' : '#fff';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  async function runNow() {
+    showToast('🔍 Scanning all sources…');
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Scanning…';
+    try {
+      const res = await fetch('/run-now', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        showToast('✓ Scan complete! Refreshing…');
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        showToast('✗ ' + data.message, false);
+        btn.disabled = false;
+        btn.textContent = 'Run Check Now';
+      }
+    } catch(e) {
+      showToast('✗ Network error', false);
+      btn.disabled = false;
+      btn.textContent = 'Run Check Now';
+    }
+  }
+</script>
+
+</body>
+</html>
