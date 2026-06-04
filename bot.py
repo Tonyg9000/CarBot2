@@ -359,6 +359,9 @@ def run_check():
 scheduler = BackgroundScheduler()
 
 def start_scheduler():
+    if scheduler.running:
+        log.info("Scheduler already running — skipping start.")
+        return
     init_db()
     scheduler.add_job(run_check, "interval", minutes=CHECK_INTERVAL, id="car_check", replace_existing=True)
     scheduler.start()

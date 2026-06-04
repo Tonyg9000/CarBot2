@@ -3,15 +3,19 @@ Flask web interface for Classic Car Alert Bot
 """
 
 import os
+import atexit
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from bot import init_db, get_config, set_config, get_recent_listings, run_check, start_scheduler, scheduler
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "classic-car-bot-secret-2024")
 
-@app.before_request
-def ensure_db():
-    init_db()
+# Init DB and start scheduler exactly once at module load
+init_db()
+if not scheduler.running:
+    start_scheduler()
+atexit.register(lambda: scheduler.shutdown(wait=False) if scheduler.running else None)
+
 
 @app.route("/")
 def index():
@@ -32,12 +36,14 @@ def index():
         next_run=next_run,
     )
 
+
 @app.route("/save-settings", methods=["POST"])
 def save_settings():
     email = request.form.get("email", "").strip()
     if email:
         set_config("alert_email", email)
     return redirect(url_for("index"))
+
 
 @app.route("/run-now", methods=["POST"])
 def run_now():
@@ -47,9 +53,11 @@ def run_now():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
 @app.route("/api/listings")
 def api_listings():
     return jsonify(get_recent_listings(100))
+
 
 @app.route("/api/status")
 def api_status():
@@ -66,13 +74,7 @@ def api_status():
         "alert_email": get_config("alert_email") or "",
     })
 
+
 if __name__ == "__main__":
-    start_scheduler()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-
-
-# Auto-start scheduler when loaded by gunicorn
-import atexit
-start_scheduler()
-atexit.register(lambda: scheduler.shutdown(wait=False))
