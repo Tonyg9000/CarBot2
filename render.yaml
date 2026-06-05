@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: classic-car-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 2 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: ALERT_EMAIL
+        sync: false
+      - key: CHECK_INTERVAL_MINUTES
+        value: "15"
+      - key: SECRET_KEY
+        generateValue: true
