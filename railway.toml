@@ -1,5 +1,6 @@
 [build]
 builder = "RAILPACK"
+nixpacksPlan = ""
 
 [deploy]
 startCommand = "gunicorn app:app -c gunicorn.conf.py"
